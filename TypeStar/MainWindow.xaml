@@ -1,0 +1,14 @@
+﻿<Window x:Class="TypeStar.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="MainWindow" Height="350" Width="525"
+		Loaded="Window_Loaded"
+		Closed="Window_Closed">
+	<StackPanel>
+		<GroupBox Margin="10">
+
+		</GroupBox>
+		<Button x:Name="btnStart" Content="Start" IsEnabled="False" Click="btnStart_Click" />
+		<Button x:Name="btnStop" Content="Stop" IsEnabled="False" Click="btnStop_Click" />
+	</StackPanel>
+</Window>
