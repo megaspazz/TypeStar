@@ -16,6 +16,7 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
+using System.IO;
 
 namespace TypeStar
 {
@@ -24,28 +25,41 @@ namespace TypeStar
 	/// </summary>
 	public partial class MainWindow : Window
 	{
-		private const string CHROME_PATH = @"exe\";
-		private const double CHARS_PER_WORD = 5;
+        /*
+         * TODO LIST:
+         * - make multiple mistakes in a row (requires updated calculation in UpdateRawWPM)
+         * - variable mistake length (requires updated calculation in UpdateRawWPM)
+         * - WPF bindings and validation instead of event-based manual updates/validation
+         */
+        private static readonly string CHROME_PATH = @"exe\";
 
-		private const int SLEEP_INTERVAL = 100;
-		private const int LOOP_INTERVAL = 100;
-		private const int POST_RACE_DELAY = 2500;
+        private double TARGET_WPM;
+        private double TARGET_ACC;
+        private double CHARS_PER_WORD;
 
-		private const double TARGET_WPM = 280;
-		private const double TARGET_ERR = 0.05;
-		
-		private IWebDriver _driver;
+        private double RAW_WPM;
+        private int TIME_LO;
+        private int TIME_HI;
 
-		private bool _stop;
+        private int SLEEP_INTERVAL;
+        private int LOOP_INTERVAL;
+        private int POST_RACE_DELAY;
 
-		public MainWindow()
+        private IWebDriver _driver;
+
+        private bool _stopNow;
+        private bool _lastRun;
+
+        private static readonly Random RNG = new Random();
+
+        public MainWindow()
 		{
 			InitializeComponent();
 		}
 
 		private void Window_Loaded(object sender, RoutedEventArgs e)
 		{
-			InitDriverAsync();
+            InitDriverAsync();
 		}
 
 		private async void InitDriverAsync()
@@ -53,11 +67,15 @@ namespace TypeStar
 			await Task.Run(() =>
 			{
 				_driver = new ChromeDriver(CHROME_PATH);
-				_driver.Navigate().GoToUrl("http://www.typeracer.com");
 			});
 
 			this.btnStart.IsEnabled = true;
-		}
+
+            await Task.Run(() =>
+            {
+                _driver.Navigate().GoToUrl("http://www.typeracer.com");
+            });
+        }
 
 		private void Window_Closed(object sender, EventArgs e)
 		{
@@ -76,15 +94,17 @@ namespace TypeStar
 		{
 			// Disable all the controls on the form while it's running
 			this.btnStart.IsEnabled = false;
-			this.btnStop.IsEnabled = true;
+			this.btnStopNow.IsEnabled = true;
+            this.btnLastRun.IsEnabled = true;
 
-			_stop = false;
+            _stopNow = false;
+            _lastRun = false;
 			await Task.Run(() =>
 			{
-				while (!_stop)
+				while (!_lastRun)
 				{
 					// Click the "Race Again" link if it is present
-					while (true)
+					while (!_lastRun)
 					{
 						try
 						{
@@ -111,31 +131,43 @@ namespace TypeStar
 						{
 							inputClass = null;
 						}
-					} while (inputClass == null);
+					} while (inputClass == null && !_stopNow);
 
 					// If the race has started, then do the race
-					if (!inputClass.Contains("txtInput-unfocused"))
+					if (inputClass != null && !inputClass.Contains("txtInput-unfocused"))
 					{
-						DoRace(TARGET_WPM, TARGET_ERR);
-						ResponsiveSleep(POST_RACE_DELAY);
+						DoRace();
+						ResponsiveSleepLastRun(POST_RACE_DELAY);
 					}
 
 					// Wait a little bit to not tax the CPU so hard with this loop
-					Thread.Sleep(LOOP_INTERVAL);
+					ResponsiveSleepLastRun(LOOP_INTERVAL);
 				}
 			});
 
 			// Enable all the controls when it's done running
 			this.btnStart.IsEnabled = true;
-			this.btnStop.IsEnabled = false;
-		}
+            this.btnStopNow.IsEnabled = false;
+            this.btnLastRun.IsEnabled = false;
+        }
 
-		private void btnStop_Click(object sender, RoutedEventArgs e)
+		private void btnStopNow_Click(object sender, RoutedEventArgs e)
 		{
-			_stop = true;
-		}
+			_stopNow = true;
+            _lastRun = true;
 
-		private IWebElement GetInputBox()
+            this.btnStopNow.IsEnabled = false;
+            this.btnLastRun.IsEnabled = false;
+        }
+
+        private void btnLastRun_Click(object sender, RoutedEventArgs e)
+        {
+            _lastRun = true;
+
+            this.btnLastRun.IsEnabled = false;
+        }
+
+        private IWebElement GetInputBox()
 		{
 			return _driver.FindElement(By.XPath("//table[@class = 'gameView']/tbody/tr[2]//table/tbody/tr[2]//input"));
 		}
@@ -152,68 +184,187 @@ namespace TypeStar
 
 		private void SleepRandom(Random rng, int lo, int hi)
 		{
-			Thread.Sleep(rng.Next(lo, hi + 1));
+			ResponsiveSleepStopNow(rng.Next(lo, hi + 1));
 		}
 
 		private void DoActionDelay(Action act, int time)
 		{
 			Stopwatch sw = new Stopwatch();
 			sw.Start();
+
 			act.Invoke();
-			int diff = (int)(time - sw.ElapsedMilliseconds);
-			if (diff > 0)
-			{
-				Thread.Sleep(diff);
-			}
+
+            int diff = (int)(time - sw.ElapsedMilliseconds);
+            ResponsiveSleepStopNow(diff);
 		}
 
-		private void DoRace(double wpm, double err)
+		private void DoRace()
 		{
-			Random rng = new Random();
-			double cpm = CHARS_PER_WORD * wpm;
-			double delay = 60000 / cpm;
-			int timeLo = Math.Max(1, (int)(delay * 0.25));
-			int timeHi = Math.Max(1, (int)(delay * 1.75));
-
 			IWebElement inputElt = GetInputBox();
 			string txt = GetRaceText();
 			foreach (char c in txt)
 			{
-				if (_stop)
+				if (_stopNow)
 				{
 					break;
 				}
 
-				while (rng.NextDouble() < err && !_stop)
+				while (RNG.NextDouble() > TARGET_ACC && !_stopNow)
 				{
 					DoActionDelay(
-						() => inputElt.SendKeys(char.ToString((char)rng.Next('a', 'z' + 1))),
-						rng.Next(timeLo, timeHi + 1)
+						() => inputElt.SendKeys(char.ToString((char)RNG.Next('a', 'z' + 1))),
+						RNG.Next(TIME_LO, TIME_HI + 1)
 					);
 					DoActionDelay(
 						() => inputElt.SendKeys(Keys.Backspace),
-						rng.Next(timeLo, timeHi + 1)
+						RNG.Next(TIME_LO, TIME_HI + 1)
 					);
 				}
 				DoActionDelay(
 					() => inputElt.SendKeys(char.ToString(c)),
-					rng.Next(timeLo, timeHi + 1)
+					RNG.Next(TIME_LO, TIME_HI + 1)
 				);
 			}
 		}
 
-		private void ResponsiveSleep(int ms)
+		private void ResponsiveSleepLastRun(int ms)
 		{
-			Stopwatch sw = new Stopwatch();
-			sw.Start();
-			while (!_stop && sw.ElapsedMilliseconds < ms)
-			{
-				int time = (int)Math.Max(SLEEP_INTERVAL, ms - sw.ElapsedMilliseconds);
-				if (time > 0)
-				{
-					Thread.Sleep(time);
-				}
-			}
+            if (_lastRun || ms <= 0)
+            {
+                return;
+            }
+
+            if (ms <= SLEEP_INTERVAL)
+            {
+                Thread.Sleep(ms);
+            }
+            else
+            {
+                Stopwatch sw = new Stopwatch();
+                sw.Start();
+                while (!_lastRun && sw.ElapsedMilliseconds < ms)
+                {
+                    int time = (int)Math.Max(SLEEP_INTERVAL, ms - sw.ElapsedMilliseconds);
+                    if (time > 0)
+                    {
+                        Thread.Sleep(time);
+                    }
+                }
+            }
 		}
-	}
+
+        private void ResponsiveSleepStopNow(int ms)
+        {
+            if (_stopNow || ms <= 0)
+            {
+                return;
+            }
+
+            if (ms <= SLEEP_INTERVAL)
+            {
+                Thread.Sleep(ms);
+            }
+            else
+            {
+                Stopwatch sw = new Stopwatch();
+                sw.Start();
+                while (!_stopNow && sw.ElapsedMilliseconds < ms)
+                {
+                    int time = (int)Math.Max(SLEEP_INTERVAL, ms - sw.ElapsedMilliseconds);
+                    if (time > 0)
+                    {
+                        Thread.Sleep(time);
+                    }
+                }
+            }
+        }
+
+        private void UpdateTargetWPM(object sender, RoutedEventArgs e)
+        {
+            ValidateDoubleTextBox(this.txtTargetWPM, ref TARGET_WPM, 0);
+            UpdateTargetWPM();
+        }
+
+        private void UpdateTargetAccuracy(object sender, RoutedEventArgs e)
+        {
+            ValidateDoubleTextBox(this.txtTargetAccuracy, ref TARGET_ACC, 0, 1);
+            UpdateTargetWPM();
+        }
+
+        private void UpdateCharsPerWord(object sender, RoutedEventArgs e)
+        {
+            ValidateDoubleTextBox(this.txtCharsPerWord, ref CHARS_PER_WORD, 0);
+            UpdateTargetWPM();
+        }
+
+        private void UpdateSleepInterval(object sender, RoutedEventArgs e)
+        {
+            ValidateIntegerTextBox(this.txtSleepInterval, ref SLEEP_INTERVAL);
+        }
+
+        private void UpdateLoopInterval(object sender, RoutedEventArgs e)
+        {
+            ValidateIntegerTextBox(this.txtLoopInterval, ref LOOP_INTERVAL);
+        }
+
+        private void UpdatePostRaceDelay(object sender, RoutedEventArgs e)
+        {
+            ValidateIntegerTextBox(this.txtPostRaceDelay, ref POST_RACE_DELAY);
+        }
+
+        private void InvalidTextBox(TextBox tb)
+        {
+            tb.Background = Brushes.LightPink;
+        }
+
+        private void ValidTextBox(TextBox tb)
+        {
+            tb.Background = Brushes.White;
+        }
+
+        private bool ValidateDoubleTextBox(TextBox tb, ref double val, double lo = double.MinValue, double hi = double.MaxValue)
+        {
+            string txt = tb.Text;
+            double res;
+            if (double.TryParse(txt, out res) && res >= lo && res <= hi)
+            {
+                val = res;
+                ValidTextBox(tb);
+                return true;
+            }
+            else
+            {
+                InvalidTextBox(tb);
+                return false;
+            }
+        }
+
+        private bool ValidateIntegerTextBox(TextBox tb, ref int val, int lo = int.MinValue, int hi = int.MaxValue)
+        {
+            string txt = tb.Text;
+            int res;
+            if (int.TryParse(txt, out res) && res >= lo && res <= hi)
+            {
+                val = res;
+                ValidTextBox(tb);
+                return true;
+            }
+            else
+            {
+                InvalidTextBox(tb);
+                return false;
+            }
+        }
+
+        private void UpdateTargetWPM()
+        {
+            RAW_WPM = TARGET_WPM * (3 - (2 * TARGET_ACC));
+            this.txtRawWPM.Text = RAW_WPM.ToString("N3");
+
+            double cpm = (1 + CHARS_PER_WORD) * TARGET_WPM;
+            double delay = 60000 / cpm;
+            TIME_LO = Math.Max(1, (int)(delay * 0.25));
+            TIME_HI = Math.Max(1, (int)(delay * 1.75));
+        }
+    }
 }

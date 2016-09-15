@@ -1,14 +1,78 @@
 ﻿<Window x:Class="TypeStar.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="MainWindow" Height="350" Width="525"
+        Title="TypeStar" Width="300"
+        SizeToContent="Height"
 		Loaded="Window_Loaded"
 		Closed="Window_Closed">
-	<StackPanel>
-		<GroupBox Margin="10">
+    <StackPanel>
+        <GroupBox Margin="10" Padding="10">
+            <GroupBox.Header>
+                <TextBlock Text="Timing Settings [milliseconds]" FontWeight="Bold" Padding="2" />
+            </GroupBox.Header>
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
 
-		</GroupBox>
-		<Button x:Name="btnStart" Content="Start" IsEnabled="False" Click="btnStart_Click" />
-		<Button x:Name="btnStop" Content="Stop" IsEnabled="False" Click="btnStop_Click" />
-	</StackPanel>
+                <TextBlock Grid.Row="0" Grid.Column="0" Text="Sleep Interval" Margin="0, 0, 10, 0" />
+                <TextBox x:Name="txtSleepInterval" Grid.Row="0" Grid.Column="1" Text="100" Loaded="UpdateSleepInterval" LostFocus="UpdateSleepInterval" />
+
+                <TextBlock Grid.Row="1" Grid.Column="0" Text="Loop Interval" Margin="0, 0, 10, 0" />
+                <TextBox x:Name="txtLoopInterval" Grid.Row="1" Grid.Column="1" Text="100" Loaded="UpdateLoopInterval" LostFocus="UpdateLoopInterval" />
+
+                <TextBlock Grid.Row="2" Grid.Column="0" Text="Post-Race Delay" Margin="0, 0, 10, 0" />
+                <TextBox x:Name="txtPostRaceDelay" Grid.Row="2" Grid.Column="1" Text="2500" Loaded="UpdatePostRaceDelay" LostFocus="UpdatePostRaceDelay" />
+            </Grid>
+        </GroupBox>
+
+        <GroupBox Margin="10" Padding="10">
+            <GroupBox.Header>
+                <TextBlock Text="WPM Settings" FontWeight="Bold" Padding="2" />
+            </GroupBox.Header>
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <TextBlock Grid.Row="0" Grid.Column="0" Text="Target WPM" Margin="0, 0, 10, 0" />
+                <TextBox x:Name="txtTargetWPM" Grid.Row="0" Grid.Column="1" Text="250" Loaded="UpdateTargetWPM" LostFocus="UpdateTargetWPM" />
+
+                <TextBlock Grid.Row="1" Grid.Column="0" Text="Target Accuracy" Margin="0, 0, 10, 0" />
+                <TextBox x:Name="txtTargetAccuracy" Grid.Row="1" Grid.Column="1" Text="0.95" Loaded="UpdateTargetAccuracy" LostFocus="UpdateTargetAccuracy" />
+
+                <TextBlock Grid.Row="2" Grid.Column="0" Text="Letters per Word" Margin="0, 0, 10, 0" />
+                <TextBox x:Name="txtCharsPerWord" Grid.Row="2" Grid.Column="1" Text="5.1" Loaded="UpdateCharsPerWord" LostFocus="UpdateCharsPerWord" />
+
+                <TextBlock Grid.Row="3" Grid.Column="0" Text="Raw WPM" Margin="0, 0, 10, 0" />
+                <TextBox x:Name="txtRawWPM" Grid.Row="3" Grid.Column="1" IsReadOnly="True" />
+            </Grid>
+        </GroupBox>
+
+
+        <GroupBox Margin="10" Padding="10">
+            <GroupBox.Header>
+                <TextBlock Text="Play TypeRacer" FontWeight="Bold" Padding="2" />
+            </GroupBox.Header>
+            
+            <StackPanel>
+                <Button x:Name="btnStart" Content="Start" IsEnabled="False" Click="btnStart_Click" />
+                <Button x:Name="btnStopNow" Content="Stop Now" IsEnabled="False" Click="btnStopNow_Click" />
+                <Button x:Name="btnLastRun" Content="Last Run" IsEnabled="False" Click="btnLastRun_Click" />
+            </StackPanel>
+        </GroupBox>
+    </StackPanel>
 </Window>
