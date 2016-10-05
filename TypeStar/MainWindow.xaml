@@ -55,7 +55,7 @@
                 <TextBox x:Name="txtTargetAccuracy" Grid.Row="1" Grid.Column="1" Text="0.95" Loaded="UpdateTargetAccuracy" LostFocus="UpdateTargetAccuracy" />
 
                 <TextBlock Grid.Row="2" Grid.Column="0" Text="Letters per Word" Margin="0, 0, 10, 0" />
-                <TextBox x:Name="txtCharsPerWord" Grid.Row="2" Grid.Column="1" Text="5.1" Loaded="UpdateCharsPerWord" LostFocus="UpdateCharsPerWord" />
+                <TextBox x:Name="txtCharsPerWord" Grid.Row="2" Grid.Column="1" Text="5.0" Loaded="UpdateCharsPerWord" LostFocus="UpdateCharsPerWord" />
 
                 <TextBlock Grid.Row="3" Grid.Column="0" Text="Raw WPM" Margin="0, 0, 10, 0" />
                 <TextBox x:Name="txtRawWPM" Grid.Row="3" Grid.Column="1" IsReadOnly="True" />

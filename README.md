@@ -1,4 +1,5 @@
 # TypeStar
+
 Simple C# bot for TypeRacer using Selenium WebDriver
 
 ## Warnings and Disclaimers
@@ -30,7 +31,7 @@ These are the most likely the settings you'll be interested in, since they set t
 
 * **Target WPM**: This is the WPM that you would like the bot to reach.  It is the WPM after all errors have been corrected.  TypeRacer will also automatically reject WPM scores that are way too high.  Note that TypeRacer will require you to verify your speed by completing a captcha typing test, for which you get several tries to succeed.  You don't need perfect accuracy, and TypeRacer will allow WPM 25% higher than your test result to be accepted.  For example, if you scored 160 WPM on the typing test, TypeRacer will accept all scores up to 200 WPM.  Don't set this number way too high such that you won't be able to pass the test.  If you care about saving your score, the bot is only as good as 125% of your peak typing speed.
 * **Target Accuracy**: This is the probability that the bot will type the correct character.  You should set this value between 0 and 1, inclusive.
-* **Letters per Word**: This is the average value number of characters in each word.  The default value is just some number I found online somewhere.  I can't even find the source anymore--it seems that a Google search now shows that this number is a bit on the high side.  However, I found that it worked quite well for TypeRacer.  Since the bot actually uses CPM (characters per minute) internally to determine how fast it should type, this parameter helps convert the CPM to WPM.
+* **Letters per Word**: This is the average value number of characters in each word.  Since the bot actually uses CPM (characters per minute) internally to determine how fast it should type, this parameter helps convert the CPM to WPM.  The default value is just what TypeRacer says they use to calculate your WPM, so it's not great to change this value.
 * **Raw WPM**: You can't actually set this yourself, but this uses the parameters you supplied above to produce an estimate of the raw WPM, which is the WPM including errors.
 
 ### Play TypeRacer
@@ -50,4 +51,4 @@ Most of this will probably never get done, since this is just a simple demonstra
 * Currently, the bot has the same error rate on every character, regardless of what it is.  This is not realistic because humans probably make more mistakes typing certain characters and words than others--for example, I would imagine that people are more likely to make a mistake on numbers or infrequently used punctuation symbols than common English words.  One possible enhancement would be a definition of error rates for different characters.
 * Currently, the bot only has variance for timings at each character.  This means the bot's scores are very similar across races.  This is not realistic because humans probably have much higher variance between races, without consistently getting similar numbers for both WPM and accuracy from race to race.  One possible way to address this issue could be to have these settings be chosen off of another distribution at the start of each race.
 
-At the end of the day, it's probably more fun to actually get better at typing than to use a program to artifically boost your scores on TypeRacer, right?
+At the end of the day, it's probably more fun to actually get better at typing than to use a program to artificially boost your scores on TypeRacer, right?
