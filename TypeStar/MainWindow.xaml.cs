@@ -31,6 +31,7 @@ namespace TypeStar
          * - variable mistake length (requires updated calculation in UpdateRawWPM)
          * - WPF bindings and validation instead of event-based manual updates/validation
          */
+
         private static readonly string CHROME_PATH = @"exe\";
 
         private double TARGET_WPM;
