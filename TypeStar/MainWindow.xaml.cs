@@ -32,6 +32,8 @@ namespace TypeStar
          * - WPF bindings and validation instead of event-based manual updates/validation
          */
 
+        #region Private Variables
+
         private static readonly string CHROME_PATH = @"exe\";
 
         private double TARGET_WPM;
@@ -48,10 +50,16 @@ namespace TypeStar
 
         private IWebDriver _driver;
 
+        private Task _bgRunTask;
+
         private bool _stopNow;
         private bool _lastRun;
 
         private static readonly Random RNG = new Random();
+
+        #endregion
+
+        #region Loading and Unloading the Program
 
         public MainWindow()
 		{
@@ -82,16 +90,21 @@ namespace TypeStar
 		{
 			if (_driver != null)
 			{
+                // Stop the current run before exiting so Selenium doesn't throw an error when quitting the driver
+                if (_bgRunTask != null)
+                {
+                    StopNow();
+                    _bgRunTask.Wait();
+                }
 				_driver.Quit();
 			}
 		}
 
-		private void btnStart_Click(object sender, RoutedEventArgs e)
-		{
-			RunAsync();
-		}
+        #endregion
 
-		private async void RunAsync()
+        #region Functions for Bot Logic
+
+        private async void RunAsync()
 		{
 			// Disable all the controls on the form while it's running
 			this.btnStart.IsEnabled = false;
@@ -100,7 +113,7 @@ namespace TypeStar
 
             _stopNow = false;
             _lastRun = false;
-			await Task.Run(() =>
+			_bgRunTask = Task.Run(() =>
 			{
 				while (!_lastRun)
 				{
@@ -146,58 +159,14 @@ namespace TypeStar
 				}
 			});
 
+            // wait for the bot to finish
+            await _bgRunTask;
+
 			// Enable all the controls when it's done running
 			this.btnStart.IsEnabled = true;
             this.btnStopNow.IsEnabled = false;
             this.btnLastRun.IsEnabled = false;
         }
-
-		private void btnStopNow_Click(object sender, RoutedEventArgs e)
-		{
-			_stopNow = true;
-            _lastRun = true;
-
-            this.btnStopNow.IsEnabled = false;
-            this.btnLastRun.IsEnabled = false;
-        }
-
-        private void btnLastRun_Click(object sender, RoutedEventArgs e)
-        {
-            _lastRun = true;
-
-            this.btnLastRun.IsEnabled = false;
-        }
-
-        private IWebElement GetInputBox()
-		{
-			return _driver.FindElement(By.XPath("//table[@class = 'gameView']/tbody/tr[2]//table/tbody/tr[2]//input"));
-		}
-
-		private IWebElement GetRaceAgainLink()
-		{
-			return _driver.FindElement(By.XPath("//table[@class = 'gameView']/tbody/tr[3]//table[@class = 'navControls']//a[@class = 'raceAgainLink']"));
-		}
-
-		private string GetRaceText()
-		{
-			return _driver.FindElement(By.XPath("//table[@class = 'gameView']/tbody/tr[2]//table//tr/td/div/div/div")).Text;
-		}
-
-		private void SleepRandom(Random rng, int lo, int hi)
-		{
-			ResponsiveSleepStopNow(rng.Next(lo, hi + 1));
-		}
-
-		private void DoActionDelay(Action act, int time)
-		{
-			Stopwatch sw = new Stopwatch();
-			sw.Start();
-
-			act.Invoke();
-
-            int diff = (int)(time - sw.ElapsedMilliseconds);
-            ResponsiveSleepStopNow(diff);
-		}
 
 		private void DoRace()
 		{
@@ -226,9 +195,83 @@ namespace TypeStar
 					RNG.Next(TIME_LO, TIME_HI + 1)
 				);
 			}
-		}
+        }
 
-		private void ResponsiveSleepLastRun(int ms)
+        #endregion
+
+        #region Functions for Starting and Stopping
+
+        private void btnStart_Click(object sender, RoutedEventArgs e)
+        {
+            RunAsync();
+        }
+
+        private void btnStopNow_Click(object sender, RoutedEventArgs e)
+        {
+            StopNow();
+        }
+
+        private void btnLastRun_Click(object sender, RoutedEventArgs e)
+        {
+            LastRun();
+        }
+
+        private void StopNow()
+        {
+            _stopNow = true;
+            _lastRun = true;
+
+            this.btnStopNow.IsEnabled = false;
+            this.btnLastRun.IsEnabled = false;
+        }
+
+        private void LastRun()
+        {
+            _lastRun = true;
+
+            this.btnLastRun.IsEnabled = false;
+        }
+
+        #endregion
+
+        #region Functions to Find Elements
+
+        private IWebElement GetInputBox()
+        {
+            return _driver.FindElement(By.XPath("//table[@class = 'gameView']/tbody/tr[2]//table/tbody/tr[2]//input"));
+        }
+
+        private IWebElement GetRaceAgainLink()
+        {
+            return _driver.FindElement(By.XPath("//table[@class = 'gameView']/tbody/tr[3]//table[@class = 'navControls']//a[@class = 'raceAgainLink']"));
+        }
+
+        private string GetRaceText()
+        {
+            return _driver.FindElement(By.XPath("//table[@class = 'gameView']/tbody/tr[2]//table//tr/td/div/div/div")).Text;
+        }
+
+        #endregion
+
+        #region Sleep Functions
+
+        private void SleepRandom(Random rng, int lo, int hi)
+        {
+            ResponsiveSleepStopNow(rng.Next(lo, hi + 1));
+        }
+
+        private void DoActionDelay(Action act, int time)
+        {
+            Stopwatch sw = new Stopwatch();
+            sw.Start();
+
+            act.Invoke();
+
+            int diff = (int)(time - sw.ElapsedMilliseconds);
+            ResponsiveSleepStopNow(diff);
+        }
+
+        private void ResponsiveSleepLastRun(int ms)
 		{
             if (_lastRun || ms <= 0)
             {
@@ -280,38 +323,139 @@ namespace TypeStar
             }
         }
 
-        private void UpdateTargetWPM(object sender, RoutedEventArgs e)
+        #endregion
+
+        #region Updating WPM Parameters
+
+        private void txtTargetWPM_Loaded_LostFocus(object sender, RoutedEventArgs e)
+        {
+            UpdateTargetWPM();
+        }
+
+        private void txtTargetAccuracy_Loaded_LostFocus(object sender, RoutedEventArgs e)
+        {
+            UpdateTargetAccuracy();
+        }
+
+        private void txtCharsPerWord_Loaded_LostFocus(object sender, RoutedEventArgs e)
+        {
+            UpdateCharsPerWord();
+        }
+
+        private void txtTargetWPM_PreviewKeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter)
+            {
+                UpdateTargetWPM();
+            }
+        }
+
+        private void txtTargetAccuracy_PreviewKeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter)
+            {
+                UpdateTargetAccuracy();
+            }
+        }
+
+        private void txtCharsPerWord_PreviewKeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter)
+            {
+                UpdateCharsPerWord();
+            }
+        }
+
+        private void UpdateTargetWPM()
         {
             ValidateDoubleTextBox(this.txtTargetWPM, ref TARGET_WPM, 0);
-            UpdateTargetWPM();
+            UpdateRawWPM();
         }
 
-        private void UpdateTargetAccuracy(object sender, RoutedEventArgs e)
+        private void UpdateTargetAccuracy()
         {
             ValidateDoubleTextBox(this.txtTargetAccuracy, ref TARGET_ACC, 0, 1);
-            UpdateTargetWPM();
+            UpdateRawWPM();
         }
 
-        private void UpdateCharsPerWord(object sender, RoutedEventArgs e)
+        private void UpdateCharsPerWord()
         {
             ValidateDoubleTextBox(this.txtCharsPerWord, ref CHARS_PER_WORD, 0);
-            UpdateTargetWPM();
+            UpdateRawWPM();
         }
 
-        private void UpdateSleepInterval(object sender, RoutedEventArgs e)
+        private void UpdateRawWPM()
+        {
+            RAW_WPM = TARGET_WPM * (3 - (2 * TARGET_ACC));
+            this.txtRawWPM.Text = RAW_WPM.ToString("N3");
+
+            double cpm = (1 + CHARS_PER_WORD) * TARGET_WPM;
+            double delay = 60000 / cpm;
+            TIME_LO = Math.Max(1, (int)(delay * 0.25));
+            TIME_HI = Math.Max(1, (int)(delay * 1.75));
+        }
+
+        #endregion
+
+        #region Updating Sleep Parameters
+
+        private void txtSleepInterval_Loaded_LostFocus(object sender, RoutedEventArgs e)
+        {
+            UpdateSleepInterval();
+        }
+
+        private void txtLoopInterval_Loaded_LostFocus(object sender, RoutedEventArgs e)
+        {
+            UpdateLoopInterval();
+        }
+
+        private void txtPostRaceDelay_Loaded_LostFocus(object sender, RoutedEventArgs e)
+        {
+            UpdatePostRaceDelay();
+        }
+
+        private void txtSleepInterval_PreviewKeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter)
+            {
+                UpdateSleepInterval();
+            }
+        }
+
+        private void txtLoopInterval_PreviewKeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter)
+            {
+                UpdateLoopInterval();
+            }
+        }
+
+        private void txtPostRaceDelay_PreviewKeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter)
+            {
+                UpdatePostRaceDelay();
+            }
+        }
+
+        private void UpdateSleepInterval()
         {
             ValidateIntegerTextBox(this.txtSleepInterval, ref SLEEP_INTERVAL);
         }
 
-        private void UpdateLoopInterval(object sender, RoutedEventArgs e)
+        private void UpdateLoopInterval()
         {
             ValidateIntegerTextBox(this.txtLoopInterval, ref LOOP_INTERVAL);
         }
 
-        private void UpdatePostRaceDelay(object sender, RoutedEventArgs e)
+        private void UpdatePostRaceDelay()
         {
             ValidateIntegerTextBox(this.txtPostRaceDelay, ref POST_RACE_DELAY);
         }
+
+        #endregion
+
+        #region Validation Functions
 
         private void InvalidTextBox(TextBox tb)
         {
@@ -357,15 +501,6 @@ namespace TypeStar
             }
         }
 
-        private void UpdateTargetWPM()
-        {
-            RAW_WPM = TARGET_WPM * (3 - (2 * TARGET_ACC));
-            this.txtRawWPM.Text = RAW_WPM.ToString("N3");
-
-            double cpm = (1 + CHARS_PER_WORD) * TARGET_WPM;
-            double delay = 60000 / cpm;
-            TIME_LO = Math.Max(1, (int)(delay * 0.25));
-            TIME_HI = Math.Max(1, (int)(delay * 1.75));
-        }
+        #endregion
     }
 }

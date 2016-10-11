@@ -22,13 +22,13 @@
                 </Grid.ColumnDefinitions>
 
                 <TextBlock Grid.Row="0" Grid.Column="0" Text="Sleep Interval" Margin="0, 0, 10, 0" />
-                <TextBox x:Name="txtSleepInterval" Grid.Row="0" Grid.Column="1" Text="100" Loaded="UpdateSleepInterval" LostFocus="UpdateSleepInterval" />
+                <TextBox x:Name="txtSleepInterval" Grid.Row="0" Grid.Column="1" Text="100" Loaded="txtSleepInterval_Loaded_LostFocus" LostFocus="txtSleepInterval_Loaded_LostFocus" PreviewKeyDown="txtSleepInterval_PreviewKeyDown" />
 
                 <TextBlock Grid.Row="1" Grid.Column="0" Text="Loop Interval" Margin="0, 0, 10, 0" />
-                <TextBox x:Name="txtLoopInterval" Grid.Row="1" Grid.Column="1" Text="100" Loaded="UpdateLoopInterval" LostFocus="UpdateLoopInterval" />
+                <TextBox x:Name="txtLoopInterval" Grid.Row="1" Grid.Column="1" Text="100" Loaded="txtLoopInterval_Loaded_LostFocus" LostFocus="txtLoopInterval_Loaded_LostFocus" PreviewKeyDown="txtLoopInterval_PreviewKeyDown" />
 
                 <TextBlock Grid.Row="2" Grid.Column="0" Text="Post-Race Delay" Margin="0, 0, 10, 0" />
-                <TextBox x:Name="txtPostRaceDelay" Grid.Row="2" Grid.Column="1" Text="2500" Loaded="UpdatePostRaceDelay" LostFocus="UpdatePostRaceDelay" />
+                <TextBox x:Name="txtPostRaceDelay" Grid.Row="2" Grid.Column="1" Text="2500" Loaded="txtPostRaceDelay_Loaded_LostFocus" LostFocus="txtPostRaceDelay_Loaded_LostFocus" PreviewKeyDown="txtPostRaceDelay_PreviewKeyDown" />
             </Grid>
         </GroupBox>
 
@@ -49,13 +49,13 @@
                 </Grid.ColumnDefinitions>
 
                 <TextBlock Grid.Row="0" Grid.Column="0" Text="Target WPM" Margin="0, 0, 10, 0" />
-                <TextBox x:Name="txtTargetWPM" Grid.Row="0" Grid.Column="1" Text="160" Loaded="UpdateTargetWPM" LostFocus="UpdateTargetWPM" />
+                <TextBox x:Name="txtTargetWPM" Grid.Row="0" Grid.Column="1" Text="160" Loaded="txtTargetWPM_Loaded_LostFocus" LostFocus="txtTargetWPM_Loaded_LostFocus" PreviewKeyDown="txtTargetWPM_PreviewKeyDown" />
 
                 <TextBlock Grid.Row="1" Grid.Column="0" Text="Target Accuracy" Margin="0, 0, 10, 0" />
-                <TextBox x:Name="txtTargetAccuracy" Grid.Row="1" Grid.Column="1" Text="0.95" Loaded="UpdateTargetAccuracy" LostFocus="UpdateTargetAccuracy" />
+                <TextBox x:Name="txtTargetAccuracy" Grid.Row="1" Grid.Column="1" Text="0.95" Loaded="txtTargetAccuracy_Loaded_LostFocus" LostFocus="txtTargetAccuracy_Loaded_LostFocus" PreviewKeyDown="txtTargetAccuracy_PreviewKeyDown" />
 
                 <TextBlock Grid.Row="2" Grid.Column="0" Text="Letters per Word" Margin="0, 0, 10, 0" />
-                <TextBox x:Name="txtCharsPerWord" Grid.Row="2" Grid.Column="1" Text="5.0" Loaded="UpdateCharsPerWord" LostFocus="UpdateCharsPerWord" />
+                <TextBox x:Name="txtCharsPerWord" Grid.Row="2" Grid.Column="1" Text="5.0" Loaded="txtCharsPerWord_Loaded_LostFocus" LostFocus="txtCharsPerWord_Loaded_LostFocus" PreviewKeyDown="txtCharsPerWord_PreviewKeyDown" />
 
                 <TextBlock Grid.Row="3" Grid.Column="0" Text="Raw WPM" Margin="0, 0, 10, 0" />
                 <TextBox x:Name="txtRawWPM" Grid.Row="3" Grid.Column="1" IsReadOnly="True" />
