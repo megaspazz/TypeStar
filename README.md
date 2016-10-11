@@ -9,12 +9,12 @@ Simple C# bot for TypeRacer using Selenium WebDriver
 
 ## Quick Start Guide
 
-0. Make sure that you have Chrome installed on your computer.
-1. When the program loads, it should open up a terminal window that will control a web browser (currently Google Chrome) that will open up shortly after.  Make sure that you don't close these windows or the bot will probably crash.
-2. After this browser loads TypeRacer, you can remain a guest or log into your account.
-3. In the program, in the "Play TypeRacer" section, click the "Start" button.
-4. Now you can just join a race, and when it starts the bot should automatically start playing.
-5. When you wish to stop, you can click the "Stop Now" or "Last Race" buttons under the "Play TypeRacer" section.  You can also just exit the program.
+1. Make sure that you have Chrome installed on your computer.
+2. When the program loads, it should open up a terminal window that will control a web browser (currently Google Chrome) that will open up shortly after.  Make sure that you don't close these windows or the bot will probably crash.
+3. After this browser loads TypeRacer, you can remain a guest or log into your account.
+4. In the program, in the "Play TypeRacer" section, click the "Start" button.
+5. Now you can just join a race, and when it starts the bot should automatically start playing.
+6. When you wish to stop, you can click the "Stop Now" or "Last Race" buttons under the "Play TypeRacer" section.  You can also just exit the program.
 
 ## Configuration Options
 
